@@ -16,18 +16,10 @@ import {
   IconMail,
   IconGift,
   IconCamera,
-  IconPlay,
   IconAIStrokedLevel1,
 } from "@douyinfe/semi-icons";
-import {
-  MdPictureInPicture,
-  MdWatchLater,
-  MdAspectRatio,
-  MdCropFree,
-} from "react-icons/md";
-import { Switch, Tooltip } from "@douyinfe/semi-ui";
+import VideoControls from "../components/VideoControl";
 import React, { useRef } from "react";
-import VolumeControl from "../components/VolumeControl";
 import { useAtom, useSetAtom } from "jotai";
 import {
   currentVideoAtom,
@@ -36,20 +28,20 @@ import {
 } from "../store/videoStore";
 import VideoPlayer from "../components/VideoPlayer";
 import InteractionPanel from "../components/InteractionPanel";
-import VideoInfo from "../components/VideoInfo"; // ✅ 新增导入
+import VideoInfo from "../components/VideoInfo";
 import CommentDrawer from "../components/CommentDrawer";
 import { showCommentsAtom } from "../store/commentStore";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 function Home() {
   const [autoPlayChecked, setAutoPlayChecked] = React.useState(false);
   const [clearScreenChecked, setClearScreenChecked] = React.useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
 
   // 视频状态管理
   const [currentVideo] = useAtom(currentVideoAtom);
   const goToNext = useSetAtom(nextVideoAtom);
   const goToPrev = useSetAtom(prevVideoAtom);
-
+  useKeyboardShortcuts();
   // 视频播放完成
   const handleVideoEnded = () => {
     if (autoPlayChecked) {
@@ -63,6 +55,7 @@ function Home() {
   const handleCommentClick = () => {
     setShowComments(true);
   };
+
   return (
     <div className="w-screen h-screen bg-[#16181F] overflow-hidden flex">
       {/* 左侧导航栏 */}
@@ -256,87 +249,13 @@ function Home() {
             {currentVideo && <CommentDrawer videoId={currentVideo.id} />}
           </div>
 
-          {/* 底部控制栏 */}
-          <div
-            className="absolute bottom-4 rounded-b-2xl h-12 bg-[#1b1b1d] backdrop-blur-md flex items-center justify-between px-4 z-40 transition-colors peer-hover:bg-black hover:bg-black group peer-hover:[&_*]:!text-white"
-            style={{ left: "0", right: "64px" }}
-          >
-            <div className="flex items-center gap-3">
-              <button className="text-[#837f7fa6] group-hover:text-white hover:scale-110 transition-all">
-                <IconPlay size="default" />
-              </button>
-              <span className="text-[#837f7fa6] group-hover:text-white text-sm font-bold transition-colors">
-                00:02 / 15:15
-              </span>
-              <VolumeControl videoRef={videoRef} />
-              <div className="relative flex-1 max-w-[300px]">
-                <input
-                  type="text"
-                  placeholder="发一条友好的弹幕吧"
-                  className="w-full bg-[#FFFFFF14] text-[#363741] placeholder-[#FFFFFFA6] pl-3 pr-10 py-1.5 rounded-full outline-none focus:bg-[#FFFFFF1F] transition-colors text-xs border border-[#FFFFFF1A]"
-                />
-                <button className="absolute right-2 top-1/2 -translate-y-1/2 text-[#FFFFFFA6] hover:text-white transition-colors">
-                  😊
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                className="text-[#837f7fa6] flex items-center gap-2 group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all"
-                onClick={() => setAutoPlayChecked(!autoPlayChecked)}
-              >
-                <Switch
-                  checked={autoPlayChecked}
-                  size="small"
-                  style={{
-                    backgroundColor: autoPlayChecked ? "#fe2c55" : "#d9d9d9",
-                  }}
-                />
-                <span>连播</span>
-              </button>
-              <button
-                onClick={() => setClearScreenChecked(!clearScreenChecked)}
-                className="flex items-center gap-2 text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all"
-              >
-                <Switch
-                  checked={clearScreenChecked}
-                  size="small"
-                  style={{
-                    backgroundColor: clearScreenChecked ? "#fe2c55" : "#d9d9d9",
-                  }}
-                />
-                <span>清屏</span>
-              </button>
-              <button className="text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all">
-                智能
-              </button>
-              <button className="text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all">
-                倍速
-              </button>
-              <Tooltip content="稍后再看" showArrow={false}>
-                <button className="text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all">
-                  <MdWatchLater size={20} />
-                </button>
-              </Tooltip>
-              <Tooltip content="小窗模式" showArrow={false}>
-                <button className="text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all">
-                  <MdPictureInPicture size={20} />
-                </button>
-              </Tooltip>
-              <VolumeControl videoRef={videoRef} />
-              <Tooltip content="网页全屏" showArrow={false}>
-                <button className="text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all">
-                  <MdAspectRatio size={20} />
-                </button>
-              </Tooltip>
-              <Tooltip content="进入全屏" showArrow={false}>
-                <button className="text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all">
-                  <MdCropFree size={20} />
-                </button>
-              </Tooltip>
-            </div>
-          </div>
+          {/* 视频控制栏 */}
+          <VideoControls
+            autoPlayChecked={autoPlayChecked}
+            onAutoPlayChange={setAutoPlayChecked}
+            clearScreenChecked={clearScreenChecked}
+            onClearScreenChange={setClearScreenChecked}
+          />
 
           {/* 右侧切换按钮栏 */}
           <div className="w-[64px] flex-shrink-0 bg-[#16181F] flex flex-col justify-center items-center z-20 pb-4">
