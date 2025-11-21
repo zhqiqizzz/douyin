@@ -37,7 +37,8 @@ import {
 import VideoPlayer from "../components/VideoPlayer";
 import InteractionPanel from "../components/InteractionPanel";
 import VideoInfo from "../components/VideoInfo"; // ✅ 新增导入
-
+import CommentDrawer from "../components/CommentDrawer";
+import { showCommentsAtom } from "../store/commentStore";
 function Home() {
   const [autoPlayChecked, setAutoPlayChecked] = React.useState(false);
   const [clearScreenChecked, setClearScreenChecked] = React.useState(false);
@@ -56,11 +57,12 @@ function Home() {
     }
   };
 
-  // 打开评论区
+  // 评论区状态
+  const setShowComments = useSetAtom(showCommentsAtom);
+  // 修改评论区
   const handleCommentClick = () => {
-    console.log("打开评论区");
+    setShowComments(true);
   };
-
   return (
     <div className="w-screen h-screen bg-[#16181F] overflow-hidden flex">
       {/* 左侧导航栏 */}
@@ -239,7 +241,7 @@ function Home() {
                 />
               )}
 
-              {/* ✅ 视频信息 - 用组件替换 */}
+              {/* 视频信息 - 用组件替换 */}
               {currentVideo && <VideoInfo video={currentVideo} />}
             </main>
 
@@ -250,6 +252,8 @@ function Home() {
                 onCommentClick={handleCommentClick}
               />
             )}
+            {/* 评论抽屉 */}
+            {currentVideo && <CommentDrawer videoId={currentVideo.id} />}
           </div>
 
           {/* 底部控制栏 */}
