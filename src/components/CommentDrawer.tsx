@@ -10,17 +10,21 @@ import {
   sendCommentAtom,
   likeCommentAtom,
   commentSortAtom,
+  virtualCommentCountAtom,
+  actualCommentCountAtom,
+  initVirtualCountAtom,
 } from "../store/commentStore";
 import CommentList from "./CommentList";
 import { IconClose, IconSend } from "@douyinfe/semi-icons";
 import { Spin, Toast } from "@douyinfe/semi-ui";
-import type { CommentItem } from "../types";
+import type { CommentItem, VideoItem } from "../types";
 
 interface CommentDrawerProps {
   videoId: string;
+  video: VideoItem; // 添加 video 参数获取初始评论数
 }
 
-function CommentDrawer({ videoId }: CommentDrawerProps) {
+function CommentDrawer({ videoId, video }: CommentDrawerProps) {
   const [showComments, setShowComments] = useAtom(showCommentsAtom);
   const [comments] = useAtom(commentsAtom);
   const [loading] = useAtom(commentsLoadingAtom);
@@ -28,24 +32,37 @@ function CommentDrawer({ videoId }: CommentDrawerProps) {
   const [sortType, setSortType] = useAtom(commentSortAtom);
   const [isSending, setIsSending] = useState(false);
 
-  // 记录当前回复的评论
   const [replyingTo, setReplyingTo] = useState<CommentItem | null>(null);
+
+  // 虚拟评论数和实际评论数
+  const [virtualCount] = useAtom(virtualCommentCountAtom);
+  const [actualCount] = useAtom(actualCommentCountAtom);
 
   const loadComments = useSetAtom(loadCommentsAtom);
   const sendComment = useSetAtom(sendCommentAtom);
   const likeComment = useSetAtom(likeCommentAtom);
+  const initVirtualCount = useSetAtom(initVirtualCountAtom);
 
   const commentsContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // 加载评论
+  // 初始化虚拟评论数
   useEffect(() => {
     if (showComments && videoId) {
+      initVirtualCount({
+        videoId,
+        initialCount: video.stats.comments, // 使用视频的初始评论数
+      });
       loadComments(videoId);
     }
-  }, [showComments, videoId, loadComments]);
+  }, [
+    showComments,
+    videoId,
+    video.stats.comments,
+    initVirtualCount,
+    loadComments,
+  ]);
 
-  // 打开抽屉时自动聚焦
   useEffect(() => {
     if (showComments) {
       setTimeout(() => {
@@ -54,14 +71,12 @@ function CommentDrawer({ videoId }: CommentDrawerProps) {
     }
   }, [showComments]);
 
-  // 关闭抽屉
   const handleClose = () => {
     setShowComments(false);
     setCommentInput("");
     setReplyingTo(null);
   };
 
-  // 发送评论
   const handleSend = async () => {
     if (!commentInput.trim() || isSending) return;
 
@@ -71,13 +86,12 @@ function CommentDrawer({ videoId }: CommentDrawerProps) {
       await sendComment({
         videoId,
         content: commentInput.trim(),
-        parentId: replyingTo?.id, // 如果是回复，传入父评论ID
+        parentId: replyingTo?.id,
       });
 
       setCommentInput("");
       setReplyingTo(null);
 
-      // 滚动到顶部
       setTimeout(() => {
         if (commentsContainerRef.current) {
           commentsContainerRef.current.scrollTo({
@@ -113,14 +127,12 @@ function CommentDrawer({ videoId }: CommentDrawerProps) {
     }
   };
 
-  // 回复评论
   const handleReply = (comment: CommentItem) => {
     setReplyingTo(comment);
     setCommentInput(`@${comment.user.name} `);
     inputRef.current?.focus();
   };
 
-  // 排序评论
   const sortedComments = [...comments].sort((a, b) => {
     if (sortType === "hot") {
       return b.likes - a.likes;
@@ -135,25 +147,22 @@ function CommentDrawer({ videoId }: CommentDrawerProps) {
 
   return (
     <>
-      {/* 遮罩层 */}
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
         onClick={handleClose}
       />
 
-      {/* 抽屉主体 */}
       <div className="fixed right-0 top-0 bottom-0 w-[460px] bg-[#1a1b1f] z-50 flex flex-col shadow-2xl animate-slide-in-right">
-        {/* 头部 */}
+        {/* 头部 - 显示虚拟总数 */}
         <div className="h-14 flex items-center justify-between px-5 border-b border-gray-800">
           <div className="flex items-center gap-4">
             <h3 className="text-white font-medium text-base">
               评论{" "}
               <span className="text-gray-500 text-sm font-normal">
-                {comments.length}
+                {virtualCount}
               </span>
             </h3>
 
-            {/* 排序切换 */}
             <div className="flex gap-2">
               <button
                 onClick={() => setSortType("hot")}
@@ -186,7 +195,6 @@ function CommentDrawer({ videoId }: CommentDrawerProps) {
           </button>
         </div>
 
-        {/* 评论列表 */}
         <div
           ref={commentsContainerRef}
           className="flex-1 overflow-y-auto px-4 py-3 comments-scroll-container"
@@ -196,17 +204,36 @@ function CommentDrawer({ videoId }: CommentDrawerProps) {
               <Spin size="large" />
             </div>
           ) : (
-            <CommentList
-              comments={sortedComments}
-              onLike={likeComment}
-              onReply={handleReply}
-            />
+            <>
+              <CommentList
+                comments={sortedComments}
+                onLike={likeComment}
+                onReply={handleReply}
+                videoId={videoId}
+              />
+
+              {/* 显示"以上X条评论"提示 */}
+              {actualCount > 0 && virtualCount > actualCount && (
+                <div className="text-center py-8 text-gray-500 text-sm">
+                  <p>以上 {actualCount} 条评论</p>
+                  <p className="text-xs mt-1">
+                    还有 {virtualCount - actualCount} 条评论未加载
+                  </p>
+                </div>
+              )}
+
+              {/* 空状态 */}
+              {actualCount === 0 && (
+                <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+                  <div className="text-6xl mb-4">💬</div>
+                  <p className="text-sm">还没有评论，快来抢沙发吧~</p>
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        {/* 底部输入区域 */}
         <div className="border-t border-gray-800 bg-[#1a1b1f]">
-          {/* 回复提示条 */}
           {replyingTo && (
             <div className="px-4 pt-3 pb-2 flex items-center justify-between bg-[#252632]">
               <span className="text-sm text-gray-400">
@@ -227,14 +254,12 @@ function CommentDrawer({ videoId }: CommentDrawerProps) {
 
           <div className="p-4">
             <div className="flex items-center gap-3">
-              {/* 当前用户头像 */}
               <img
                 src="https://api.dicebear.com/7.x/avataaars/svg?seed=current"
                 alt="当前用户"
                 className="w-9 h-9 rounded-full flex-shrink-0"
               />
 
-              {/* 输入框 */}
               <div className="flex-1 relative">
                 <input
                   ref={inputRef}
@@ -248,7 +273,6 @@ function CommentDrawer({ videoId }: CommentDrawerProps) {
                 />
               </div>
 
-              {/* 发布按钮 */}
               <button
                 onClick={handleSend}
                 disabled={!commentInput.trim() || isSending}
@@ -275,7 +299,6 @@ function CommentDrawer({ videoId }: CommentDrawerProps) {
               </button>
             </div>
 
-            {/* 提示文字 */}
             <p className="text-xs text-gray-600 mt-2 ml-12">
               按 Enter 发送{replyingTo ? "，Esc 取消回复" : ""}
             </p>

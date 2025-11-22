@@ -8,10 +8,14 @@ export const commentsLoadingAtom = atom(false);
 export const commentInputAtom = atom("");
 export const commentSortAtom = atom<"hot" | "time">("hot");
 
-// ✅ localStorage 键名前缀
+// ✅ localStorage 键名
 const COMMENTS_STORAGE_KEY = "video_comments_";
+const VIRTUAL_COUNT_STORAGE_KEY = "video_virtual_count_";
 
-// ✅ 从 localStorage 读取评论
+// ✅ 虚拟评论总数（初始值从视频 stats 获取）
+export const virtualCommentCountAtom = atom(0);
+
+// 从 localStorage 读取评论
 const getCommentsFromStorage = (videoId: string): CommentItem[] => {
   try {
     const stored = localStorage.getItem(COMMENTS_STORAGE_KEY + videoId);
@@ -22,7 +26,7 @@ const getCommentsFromStorage = (videoId: string): CommentItem[] => {
   }
 };
 
-// ✅ 保存评论到 localStorage
+// 保存评论到 localStorage
 const saveCommentsToStorage = (videoId: string, comments: CommentItem[]) => {
   try {
     localStorage.setItem(
@@ -34,8 +38,28 @@ const saveCommentsToStorage = (videoId: string, comments: CommentItem[]) => {
   }
 };
 
-// ✅ 计算总评论数（一级 + 二级）
-export const totalCommentCountAtom = atom((get) => {
+// ✅ 从 localStorage 读取虚拟评论数
+const getVirtualCountFromStorage = (videoId: string): number | null => {
+  try {
+    const stored = localStorage.getItem(VIRTUAL_COUNT_STORAGE_KEY + videoId);
+    return stored ? parseInt(stored, 10) : null;
+  } catch (error) {
+    console.error("读取虚拟评论数失败:", error);
+    return null;
+  }
+};
+
+// ✅ 保存虚拟评论数到 localStorage
+const saveVirtualCountToStorage = (videoId: string, count: number) => {
+  try {
+    localStorage.setItem(VIRTUAL_COUNT_STORAGE_KEY + videoId, count.toString());
+  } catch (error) {
+    console.error("保存虚拟评论数失败:", error);
+  }
+};
+
+// ✅ 计算实际评论数（一级 + 二级）
+export const actualCommentCountAtom = atom((get) => {
   const comments = get(commentsAtom);
   let total = comments.length;
   comments.forEach((comment) => {
@@ -46,23 +70,41 @@ export const totalCommentCountAtom = atom((get) => {
   return total;
 });
 
-// ✅ 加载评论（优先从 localStorage 读取）
+// ✅ 初始化虚拟评论数
+export const initVirtualCountAtom = atom(
+  null,
+  (get, set, params: { videoId: string; initialCount: number }) => {
+    const { videoId, initialCount } = params;
+
+    // 先尝试从 localStorage 读取
+    const storedCount = getVirtualCountFromStorage(videoId);
+
+    if (storedCount !== null) {
+      set(virtualCommentCountAtom, storedCount);
+    } else {
+      // 没有缓存，使用初始值
+      set(virtualCommentCountAtom, initialCount);
+      saveVirtualCountToStorage(videoId, initialCount);
+    }
+  }
+);
+
+// ✅ 加载评论
 export const loadCommentsAtom = atom(
   null,
   async (get, set, videoId: string) => {
     set(commentsLoadingAtom, true);
     try {
-      // 先从 localStorage 读取
+      // 从 localStorage 读取
       const storedComments = getCommentsFromStorage(videoId);
 
       if (storedComments.length > 0) {
-        // 如果有本地缓存，直接使用
         set(commentsAtom, storedComments);
         set(commentsLoadingAtom, false);
         return;
       }
 
-      // 如果没有缓存，使用 mock 数据（实际项目中这里调用 API）
+      // Mock 数据
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       const mockComments: CommentItem[] = [
@@ -147,7 +189,6 @@ export const loadCommentsAtom = atom(
       ];
 
       set(commentsAtom, mockComments);
-      // 保存到 localStorage
       saveCommentsToStorage(videoId, mockComments);
     } catch (error) {
       console.error("加载评论失败:", error);
@@ -157,7 +198,7 @@ export const loadCommentsAtom = atom(
   }
 );
 
-// ✅ 发送评论（同步到 localStorage）
+// ✅ 发送评论（虚拟数 +1）
 export const sendCommentAtom = atom(
   null,
   async (
@@ -169,7 +210,6 @@ export const sendCommentAtom = atom(
     if (!content.trim()) return;
 
     try {
-      // TODO: 实际项目中调用 API
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       const currentComments = get(commentsAtom);
@@ -217,11 +257,14 @@ export const sendCommentAtom = atom(
         updatedComments = [newComment, ...currentComments];
       }
 
-      // 更新状态
       set(commentsAtom, updatedComments);
-
-      // ✅ 保存到 localStorage
       saveCommentsToStorage(videoId, updatedComments);
+
+      // ✅ 虚拟评论数 +1
+      const currentVirtualCount = get(virtualCommentCountAtom);
+      const newVirtualCount = currentVirtualCount + 1;
+      set(virtualCommentCountAtom, newVirtualCount);
+      saveVirtualCountToStorage(videoId, newVirtualCount);
     } catch (error) {
       console.error("发送评论失败:", error);
       throw error;
@@ -229,7 +272,60 @@ export const sendCommentAtom = atom(
   }
 );
 
+// ✅ 删除评论（虚拟数 -1）
+export const deleteCommentAtom = atom(
+  null,
+  (
+    get,
+    set,
+    params: { videoId: string; commentId: string; parentId?: string }
+  ) => {
+    const { videoId, commentId, parentId } = params;
+    const currentComments = get(commentsAtom);
+    let updatedComments: CommentItem[];
+
+    if (parentId) {
+      // 删除二级评论
+      updatedComments = currentComments.map((comment) => {
+        if (comment.id === parentId) {
+          return {
+            ...comment,
+            replies: (comment.replies || []).filter(
+              (reply) => reply.id !== commentId
+            ),
+          };
+        }
+        return comment;
+      });
+    } else {
+      // 删除一级评论（包括其所有回复）
+      const deletedComment = currentComments.find((c) => c.id === commentId);
+      const deletedCount = 1 + (deletedComment?.replies?.length || 0);
+
+      updatedComments = currentComments.filter((c) => c.id !== commentId);
+
+      // ✅ 虚拟评论数 - 删除的评论数（包括回复）
+      const currentVirtualCount = get(virtualCommentCountAtom);
+      const newVirtualCount = Math.max(0, currentVirtualCount - deletedCount);
+      set(virtualCommentCountAtom, newVirtualCount);
+      saveVirtualCountToStorage(videoId, newVirtualCount);
+
+      set(commentsAtom, updatedComments);
+      saveCommentsToStorage(videoId, updatedComments);
+      return;
+    }
+
+    set(commentsAtom, updatedComments);
+    saveCommentsToStorage(videoId, updatedComments);
+
+    // ✅ 虚拟评论数 -1（只删除二级评论）
+    const currentVirtualCount = get(virtualCommentCountAtom);
+    const newVirtualCount = Math.max(0, currentVirtualCount - 1);
+    set(virtualCommentCountAtom, newVirtualCount);
+    saveVirtualCountToStorage(videoId, newVirtualCount);
+  }
+);
+
 export const likeCommentAtom = atom(null, (get, set, commentId: string) => {
   console.log("点赞评论:", commentId);
-  // TODO: 点赞逻辑也可以同步到 localStorage
 });

@@ -91,3 +91,171 @@ body {
   border-radius: 9999px !important;
   background: #fffffff5 !important;
 }
+/* ✅ 抖音式点赞心形动画 - 放大弹跳 */
+@keyframes douyinLikeHeart {
+  0% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.4) rotate(-15deg);
+  }
+  30% {
+    transform: scale(0.9) rotate(8deg);
+  }
+  45% {
+    transform: scale(1.2) rotate(-8deg);
+  }
+  60% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* ✅ 点赞数字跳动动画 */
+@keyframes douyinLikeNumber {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-10px) scale(1.4);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ✅ 破裂粒子动画 - 6个方向 */
+@keyframes douyinParticle1 {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(0, -30px) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes douyinParticle2 {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(25px, -15px) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes douyinParticle3 {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(25px, 15px) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes douyinParticle4 {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(0, 30px) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes douyinParticle5 {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(-25px, 15px) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes douyinParticle6 {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(-25px, -15px) scale(1);
+    opacity: 0;
+  }
+}
+
+.animate-douyinLikeHeart {
+  animation: douyinLikeHeart 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-douyinLikeNumber {
+  animation: douyinLikeNumber 0.5s ease-out;
+  font-weight: 600;
+}
+
+.animate-douyinParticle1 {
+  animation: douyinParticle1 0.6s ease-out forwards;
+}
+
+.animate-douyinParticle2 {
+  animation: douyinParticle2 0.6s ease-out forwards;
+}
+
+.animate-douyinParticle3 {
+  animation: douyinParticle3 0.6s ease-out forwards;
+}
+
+.animate-douyinParticle4 {
+  animation: douyinParticle4 0.6s ease-out forwards;
+}
+
+.animate-douyinParticle5 {
+  animation: douyinParticle5 0.6s ease-out forwards;
+}
+
+.animate-douyinParticle6 {
+  animation: douyinParticle6 0.6s ease-out forwards;
+}
+
+/* 已有的动画保持不变 */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 滚动条样式 */
+.comments-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.comments-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.comments-scroll-container::-webkit-scrollbar-thumb {
+  background: #ffffff20;
+  border-radius: 3px;
+}
+
+.comments-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #ffffff30;
+}

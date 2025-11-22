@@ -22,7 +22,8 @@ import {
   toggleFavoriteAtom,
   toggleFollowAtom,
 } from "../store/interactionStore";
-import { totalCommentCountAtom } from "../store/commentStore";
+import { virtualCommentCountAtom } from "../store/commentStore";
+import { useState } from "react";
 
 interface InteractionPanelProps {
   video: VideoItem;
@@ -34,8 +35,10 @@ function InteractionPanel({ video, onCommentClick }: InteractionPanelProps) {
   const [favoritedVideos] = useAtom(favoritedVideosAtom);
   const [followedUsers] = useAtom(followedUsersAtom);
 
-  // ✅ 获取实时评论总数
-  const [totalComments] = useAtom(totalCommentCountAtom);
+  const [virtualCount] = useAtom(virtualCommentCountAtom);
+
+  // 控制点赞动画
+  const [isLikeAnimating, setIsLikeAnimating] = useState(false);
 
   const toggleLike = useSetAtom(toggleLikeAtom);
   const toggleFavorite = useSetAtom(toggleFavoriteAtom);
@@ -45,8 +48,15 @@ function InteractionPanel({ video, onCommentClick }: InteractionPanelProps) {
   const isFavorited = favoritedVideos.has(video.id);
   const isFollowed = followedUsers.has(video.author.id);
 
+  // 点赞处理（触发动画）
   const handleLike = () => {
     toggleLike(video.id);
+
+    // 触发动画
+    setIsLikeAnimating(true);
+    setTimeout(() => {
+      setIsLikeAnimating(false);
+    }, 600);
   };
 
   const handleFavorite = () => {
@@ -81,9 +91,8 @@ function InteractionPanel({ video, onCommentClick }: InteractionPanelProps) {
     }
   };
 
-  // ✅ 计算显示的评论数
   const displayCommentCount =
-    totalComments > 0 ? totalComments : video.stats.comments;
+    virtualCount > 0 ? virtualCount : video.stats.comments;
 
   return (
     <div
@@ -133,20 +142,40 @@ function InteractionPanel({ video, onCommentClick }: InteractionPanelProps) {
           )}
         </div>
 
-        {/* 点赞 */}
+        {/* 点赞 - 添加抖音式动画 */}
         <button
           onClick={handleLike}
-          className="flex flex-col items-center cursor-pointer group"
+          className="flex flex-col items-center cursor-pointer group relative"
         >
-          {isLiked ? (
-            <IconLikeHeart className="text-[#fe2c55] text-[28px] drop-shadow-lg group-hover:scale-110 transition-transform animate-pulse" />
-          ) : (
-            <IconHeartStroked className="text-white text-[28px] drop-shadow-lg group-hover:scale-110 transition-transform" />
-          )}
+          {/* 破裂动效容器 */}
+          <div className="relative">
+            {isLiked ? (
+              <IconLikeHeart
+                className={`text-[#fe2c55] text-[28px] drop-shadow-lg group-hover:scale-110 transition-transform ${
+                  isLikeAnimating ? "animate-douyinLikeHeart" : ""
+                }`}
+              />
+            ) : (
+              <IconHeartStroked className="text-white text-[28px] drop-shadow-lg group-hover:scale-110 transition-transform" />
+            )}
+
+            {/* 破裂粒子效果 */}
+            {isLikeAnimating && (
+              <>
+                <span className="absolute top-1/2 left-1/2 w-1 h-1 bg-[#fe2c55] rounded-full animate-douyinParticle1" />
+                <span className="absolute top-1/2 left-1/2 w-1 h-1 bg-[#fe2c55] rounded-full animate-douyinParticle2" />
+                <span className="absolute top-1/2 left-1/2 w-1 h-1 bg-[#fe2c55] rounded-full animate-douyinParticle3" />
+                <span className="absolute top-1/2 left-1/2 w-1 h-1 bg-[#fe2c55] rounded-full animate-douyinParticle4" />
+                <span className="absolute top-1/2 left-1/2 w-1 h-1 bg-[#fe2c55] rounded-full animate-douyinParticle5" />
+                <span className="absolute top-1/2 left-1/2 w-1 h-1 bg-[#fe2c55] rounded-full animate-douyinParticle6" />
+              </>
+            )}
+          </div>
+
           <span
             className={`text-[11px] mt-0.5 font-medium drop-shadow-lg transition-colors ${
               isLiked ? "text-[#fe2c55]" : "text-white"
-            }`}
+            } ${isLikeAnimating ? "animate-douyinLikeNumber" : ""}`}
           >
             {formatNumber(video.stats.likes + (isLiked ? 1 : 0))}
           </span>

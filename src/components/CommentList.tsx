@@ -9,14 +9,18 @@ import {
 import { PiHeartBreak, PiHeartBreakFill } from "react-icons/pi";
 import { useState } from "react";
 import { Toast } from "@douyinfe/semi-ui";
+import { useSetAtom } from "jotai";
+import { deleteCommentAtom } from "../store/commentStore";
 
+// 添加 videoId 到接口定义
 interface CommentListProps {
   comments: CommentItem[];
   onLike: (commentId: string) => void;
   onReply?: (comment: CommentItem) => void;
+  videoId: string;
 }
 
-function CommentList({ comments, onReply }: CommentListProps) {
+function CommentList({ comments, onLike, onReply, videoId }: CommentListProps) {
   const [likesChange, setLikesChange] = useState<Map<string, number>>(
     new Map()
   );
@@ -24,6 +28,9 @@ function CommentList({ comments, onReply }: CommentListProps) {
   const [expandedComments, setExpandedComments] = useState<Set<string>>(
     new Set()
   );
+
+  // 删除评论功能
+  const deleteComment = useSetAtom(deleteCommentAtom);
 
   const handleLike = (commentId: string) => {
     if (hiddenComments.has(commentId)) return;
@@ -92,6 +99,14 @@ function CommentList({ comments, onReply }: CommentListProps) {
     setExpandedComments(newExpanded);
   };
 
+  // 删除评论
+  const handleDelete = (commentId: string, parentId?: string) => {
+    if (confirm("确定要删除这条评论吗？")) {
+      deleteComment({ videoId, commentId, parentId });
+      Toast.success({ content: "评论已删除", duration: 2 });
+    }
+  };
+
   if (comments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-gray-500">
@@ -109,6 +124,8 @@ function CommentList({ comments, onReply }: CommentListProps) {
         const hasReplies = comment.replies && comment.replies.length > 0;
         const isExpanded = expandedComments.has(comment.id);
         const replyCount = comment.replies?.length || 0;
+        // 判断是否是当前用户的评论
+        const isOwnComment = comment.user.id === "current-user";
 
         return (
           <div
@@ -168,15 +185,11 @@ function CommentList({ comments, onReply }: CommentListProps) {
                     }`}
                   >
                     {commentIsLiked ? (
-                      <IconLikeHeart className="text-[16px] animate-likeHeart" />
+                      <IconLikeHeart className="text-[16px]" />
                     ) : (
                       <IconHeartStroked className="text-[16px] group-hover:scale-110 transition-transform" />
                     )}
-                    <span
-                      className={`text-[13px] ${
-                        commentIsLiked ? "animate-likeNumber" : ""
-                      }`}
-                    >
+                    <span className={`text-[13px]`}>
                       {getLikesCount(comment.id, comment.likes) > 0
                         ? formatNumber(getLikesCount(comment.id, comment.likes))
                         : "赞"}
@@ -218,6 +231,16 @@ function CommentList({ comments, onReply }: CommentListProps) {
                       <PiHeartBreak className="text-[14px] group-hover:scale-110 transition-transform" />
                     )}
                   </button>
+
+                  {/* 删除按钮 - 只显示自己的评论 */}
+                  {!isHidden && isOwnComment && (
+                    <button
+                      onClick={() => handleDelete(comment.id)}
+                      className="text-[#FFFFFF99] hover:text-red-500 transition-colors text-[13px]"
+                    >
+                      删除
+                    </button>
+                  )}
                 </div>
 
                 {/* 展开/收起按钮 */}
@@ -242,12 +265,12 @@ function CommentList({ comments, onReply }: CommentListProps) {
                 {/* 二级评论区域 */}
                 {!isHidden && hasReplies && isExpanded && (
                   <div className="relative pl-5 space-y-4">
-                    {/* 左侧竖线 */}
                     <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#FFFFFF0A]" />
 
                     {comment.replies!.map((reply) => {
                       const isReplyHidden = hiddenComments.has(reply.id);
                       const replyIsLiked = isLiked(reply.id);
+                      const isOwnReply = reply.user.id === "current-user";
 
                       return (
                         <div
@@ -303,15 +326,11 @@ function CommentList({ comments, onReply }: CommentListProps) {
                                 }`}
                               >
                                 {replyIsLiked ? (
-                                  <IconLikeHeart className="text-[14px] animate-likeHeart" />
+                                  <IconLikeHeart className="text-[14px]" />
                                 ) : (
                                   <IconHeartStroked className="text-[14px] group-hover:scale-110 transition-transform" />
                                 )}
-                                <span
-                                  className={`text-[12px] ${
-                                    replyIsLiked ? "animate-likeNumber" : ""
-                                  }`}
-                                >
+                                <span className={`text-[12px]`}>
                                   {getLikesCount(reply.id, reply.likes) > 0
                                     ? formatNumber(
                                         getLikesCount(reply.id, reply.likes)
@@ -354,6 +373,18 @@ function CommentList({ comments, onReply }: CommentListProps) {
                                   <PiHeartBreak className="text-[12px] group-hover:scale-110 transition-transform" />
                                 )}
                               </button>
+
+                              {/* 删除回复按钮 */}
+                              {!isReplyHidden && isOwnReply && (
+                                <button
+                                  onClick={() =>
+                                    handleDelete(reply.id, comment.id)
+                                  }
+                                  className="text-[#FFFFFF99] hover:text-red-500 transition-colors text-[12px]"
+                                >
+                                  删除
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>

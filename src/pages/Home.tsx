@@ -266,7 +266,6 @@ function Home() {
               {currentVideo && <VideoInfo video={currentVideo} />}
             </div>
           </main>
-
           {/* 右侧互动区 - 绝对定位在右侧 */}
           {currentVideo && (
             <div className="absolute right-[64px] top-0 bottom-0 z-10 pointer-events-none">
@@ -276,10 +275,10 @@ function Home() {
               />
             </div>
           )}
-
           {/* 评论抽屉 */}
-          {currentVideo && <CommentDrawer videoId={currentVideo.id} />}
-
+          {/* {currentVideo && <CommentDrawer videoId={currentVideo.id} />}
+           */}
+          <CommentDrawer videoId={currentVideo.id} video={currentVideo} />
           {/* 视频控制栏 */}
           <VideoControls
             autoPlayChecked={autoPlayChecked}
@@ -287,7 +286,6 @@ function Home() {
             clearScreenChecked={clearScreenChecked}
             onClearScreenChange={setClearScreenChecked}
           />
-
           {/* 右侧切换按钮栏 */}
           <div className="absolute right-0 top-0 bottom-0 w-[64px] flex-shrink-0 bg-[#16181F] flex flex-col justify-center items-center z-20 pb-4">
             <div className="flex flex-col gap-4">
