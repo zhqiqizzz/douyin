@@ -17,7 +17,9 @@ import {
   IconCamera,
   IconAIStrokedLevel1,
   IconRefresh2,
+  IconCrown,
 } from "@douyinfe/semi-icons";
+import { GrUserExpert } from "react-icons/gr";
 import VideoControls from "../components/VideoControl";
 import React, { useRef } from "react";
 import { useState } from "react";
@@ -139,10 +141,7 @@ function Home() {
           <div className="w-full h-[1px] bg-[#FFFFFF14] my-1"></div>
           {/* 关注 */}
           <div className="w-full flex flex-row items-center gap-3 py-3 px-4 text-[#FFFFFFA6] hover:text-white hover:bg-[#FFFFFF0A] rounded-xl cursor-pointer transition-all">
-            <IconUserGroup
-              size="default"
-              style={{ fontSize: 16, color: "white" }}
-            />
+            <GrUserExpert style={{ fontSize: 16, color: "white" }} />
             <span className="text-[15px] font-light tracking-wide">关注</span>
           </div>
           {/* 朋友 */}
@@ -211,12 +210,12 @@ function Home() {
               <span>充钻石</span>
             </button>
             <button className="text-[#FFFFFFA6] hover:text-white transition-colors text-xs flex items-center gap-1">
-              <IconCamera size="small" />
+              <IconDesktop size="small" />
               <span>客户端</span>
             </button>
             <button className="text-[#FFFFFFA6] hover:text-white transition-colors text-xs flex items-center gap-1">
-              <IconLive size="small" />
-              <span>直播</span>
+              <IconCrown size="small" />
+              <span>壁纸</span>
             </button>
             <button className="text-[#FFFFFFA6] hover:text-white transition-colors text-xs flex items-center gap-1">
               <IconBell size="small" />
