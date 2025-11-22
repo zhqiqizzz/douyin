@@ -6,7 +6,6 @@ import {
   IconLive,
   IconVideoListStroked,
   IconDesktop,
-  IconSearch,
   IconChevronUp,
   IconChevronDown,
   IconSetting,
@@ -17,9 +16,11 @@ import {
   IconGift,
   IconCamera,
   IconAIStrokedLevel1,
+  IconRefresh2,
 } from "@douyinfe/semi-icons";
 import VideoControls from "../components/VideoControl";
 import React, { useRef } from "react";
+import { useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import {
   currentVideoAtom,
@@ -32,6 +33,7 @@ import VideoInfo from "../components/VideoInfo";
 import CommentDrawer from "../components/CommentDrawer";
 import { showCommentsAtom } from "../store/commentStore";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import SearchBar from "../components/SearchBar";
 function Home() {
   const [autoPlayChecked, setAutoPlayChecked] = React.useState(false);
   const [clearScreenChecked, setClearScreenChecked] = React.useState(false);
@@ -56,10 +58,26 @@ function Home() {
     setShowComments(true);
   };
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefreshVideos = async () => {
+    setIsRefreshing(true);
+    try {
+      console.log("刷新视频列表...");
+      // TODO: 调用 API 刷新视频
+      // await fetchNewVideos();
+    } catch (error) {
+      console.error("刷新失败:", error);
+    } finally {
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 1000);
+    }
+  };
   return (
     <div className="w-screen h-screen bg-[#16181F] overflow-hidden flex">
       {/* 左侧导航栏 */}
-      <aside className="w-[135px] bg-[#16181F] flex flex-col py-4 flex-shrink-0">
+      <aside className="w-[150px] bg-[#16181F] flex flex-col py-4 flex-shrink-0">
         <div className="flex items-center mb-4 px-2 justify-center cursor-pointer">
           <img
             src="https://p-pc-weboff.byteimg.com/tos-cn-i-9r5gewecjs/favicon.png"
@@ -70,18 +88,46 @@ function Home() {
             抖音
           </span>
         </div>
-
+        {/* 导航选项 */}
         <nav className="flex-1 flex flex-col items-center gap-1 px-2">
+          {/* 精选 */}
           <div className="w-full flex flex-row items-center gap-3 py-3 px-4 text-[#FFFFFFA6] hover:text-white hover:bg-[#FFFFFF0A] rounded-xl cursor-pointer transition-all">
             <IconHome size="default" style={{ fontSize: 16, color: "white" }} />
             <span className="text-[15px] font-light tracking-wide">精选</span>
           </div>
+          {/* 推荐 */}
+          <div className="relative group/recommend">
+            <div className="w-full flex flex-row items-center gap-3 py-3 px-4 text-white bg-[#FFFFFF1A] rounded-xl cursor-pointer transition-all hover:bg-[#FFFFFF25]">
+              <IconStar
+                size="default"
+                style={{ fontSize: 16, color: "white" }}
+              />
+              <span className="text-[15px] font-light tracking-wide flex-1">
+                推荐
+              </span>
 
-          <div className="w-full flex flex-row items-center gap-3 py-3 px-4 text-white bg-[#FFFFFF1A] rounded-xl cursor-pointer transition-all">
-            <IconStar size="default" style={{ fontSize: 16, color: "white" }} />
-            <span className="text-[15px] font-light tracking-wide">推荐</span>
+              {/* 刷新按钮 */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation(); // 防止触发外层点击
+                  handleRefreshVideos();
+                }}
+                disabled={isRefreshing}
+                className={`
+                opacity-0 group-hover/recommend:opacity-100
+                transition-all duration-200
+                w-7 h-7 rounded-full
+                flex items-center justify-center
+                bg-[#FFFFFF1A] hover:bg-[#FFFFFF33]
+                active:scale-95
+                ${isRefreshing ? "animate-spin opacity-100" : ""}
+              `}
+              >
+                <IconRefresh2 style={{ fontSize: 14, color: "white" }} />
+              </button>
+            </div>
           </div>
-
+          {/* AI抖音 */}
           <div className="w-full flex flex-row items-center gap-3 py-3 px-4 text-[#FFFFFFA6] hover:text-white hover:bg-[#FFFFFF0A] rounded-xl cursor-pointer transition-all">
             <IconAIStrokedLevel1
               size="default"
@@ -89,9 +135,9 @@ function Home() {
             />
             <span className="text-[15px] font-light tracking-wide">AI抖音</span>
           </div>
-
+          {/* 分割线 */}
           <div className="w-full h-[1px] bg-[#FFFFFF14] my-1"></div>
-
+          {/* 关注 */}
           <div className="w-full flex flex-row items-center gap-3 py-3 px-4 text-[#FFFFFFA6] hover:text-white hover:bg-[#FFFFFF0A] rounded-xl cursor-pointer transition-all">
             <IconUserGroup
               size="default"
@@ -99,7 +145,7 @@ function Home() {
             />
             <span className="text-[15px] font-light tracking-wide">关注</span>
           </div>
-
+          {/* 朋友 */}
           <div className="w-full flex flex-row items-center gap-3 py-3 px-4 text-[#FFFFFFA6] hover:text-white hover:bg-[#FFFFFF0A] rounded-xl cursor-pointer transition-all">
             <IconUserGroup
               size="default"
@@ -107,19 +153,19 @@ function Home() {
             />
             <span className="text-[15px] font-light tracking-wide">朋友</span>
           </div>
-
+          {/* 我的 */}
           <div className="w-full flex flex-row items-center gap-3 py-3 px-4 text-[#FFFFFFA6] hover:text-white hover:bg-[#FFFFFF0A] rounded-xl cursor-pointer transition-all">
             <IconUser size="default" style={{ fontSize: 16, color: "white" }} />
             <span className="text-[15px] font-light tracking-wide">我的</span>
           </div>
-
+          {/* 分割线 */}
           <div className="w-full h-[1px] bg-[#FFFFFF14] my-1"></div>
-
+          {/* 直播 */}
           <div className="w-full flex flex-row items-center gap-3 py-3 px-4 text-[#FFFFFFA6] hover:text-white hover:bg-[#FFFFFF0A] rounded-xl cursor-pointer transition-all">
             <IconLive size="default" style={{ fontSize: 16, color: "white" }} />
             <span className="text-[15px] font-light tracking-wide">直播</span>
           </div>
-
+          {/* 放映厅 */}
           <div className="w-full flex flex-row items-center gap-3 py-3 px-4 text-[#FFFFFFA6] hover:text-white hover:bg-[#FFFFFF0A] rounded-xl cursor-pointer transition-all">
             <IconDesktop
               size="default"
@@ -127,7 +173,7 @@ function Home() {
             />
             <span className="text-[15px] font-light tracking-wide">放映厅</span>
           </div>
-
+          {/* 短剧 */}
           <div className="w-full flex flex-row items-center gap-3 py-3 px-4 text-[#FFFFFFA6] hover:text-white hover:bg-[#FFFFFF0A] rounded-xl cursor-pointer transition-all">
             <IconVideoListStroked
               size="default"
@@ -136,7 +182,7 @@ function Home() {
             <span className="text-[15px] font-light tracking-wide">短剧</span>
           </div>
         </nav>
-
+        {/* 底部辅助功能按钮 */}
         <div className="pt-2 px-2">
           <div className="flex justify-around text-[#FFFFFFA6]">
             <button className="hover:text-white transition-colors p-1">
@@ -156,21 +202,9 @@ function Home() {
       <div className="flex-1 bg-[#16181F] flex flex-col overflow-hidden">
         {/* 顶部栏 */}
         <header className="h-[50px] bg-[#16181F] flex items-center justify-center px-6 flex-shrink-0 relative z-20">
-          <div className="absolute left-1/2 -translate-x-1/2 w-full max-w-[520px] px-6">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="搜索你感兴趣的内容"
-                className="w-full bg-[#1F2024] text-white placeholder-[#FFFFFF66] pl-10 pr-16 py-2 rounded-full outline-none focus:bg-[#25262B] transition-colors text-[13px] border border-[#FFFFFF14]"
-              />
-              <IconSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#FFFFFF66] text-sm" />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#FFFFFF14] hover:bg-[#FFFFFF1F] text-white text-xs px-3 py-1 rounded-full transition-colors flex items-center gap-1">
-                <IconSearch size="extra-small" />
-                搜索
-              </button>
-            </div>
+          <div className="flex-1 min-w-0 max-w-[600px] mx-auto shrink">
+            <SearchBar />
           </div>
-
           <div className="absolute right-[70px] flex items-center gap-3">
             <button className="text-[#FFFFFFA6] hover:text-white transition-colors text-xs flex items-center gap-1">
               <IconGift size="small" />
