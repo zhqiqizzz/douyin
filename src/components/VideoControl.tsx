@@ -17,7 +17,8 @@ import {
 } from "../store/playerStore";
 import VolumeControl from "./VolumeControl";
 import { useRef } from "react";
-
+import { Dropdown } from "@douyinfe/semi-ui";
+import { useState } from "react";
 interface VideoControlsProps {
   autoPlayChecked: boolean;
   onAutoPlayChange: (checked: boolean) => void;
@@ -61,17 +62,22 @@ function VideoControls({
     }
   };
 
-  // ✅ 倍速切换
-  const handleSpeedChange = () => {
-    const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
-    const currentIndex = speeds.indexOf(playbackRate);
-    const nextIndex = (currentIndex + 1) % speeds.length;
-    const newSpeed = speeds[nextIndex];
+  // 倍速选项
+  const speeds = [
+    { label: "0.5x", value: 0.5 },
+    { label: "0.75x", value: 0.75 },
+    { label: "1.0x", value: 1 },
+    { label: "1.25x", value: 1.25 },
+    { label: "1.5x", value: 1.5 },
+    { label: "2.0x", value: 2 },
+  ];
 
+  // 倍速切换（改用 Dropdown）
+  const handleSpeedChange = (value: number) => {
     const player = (window as any).player;
     if (player) {
-      player.playbackRate = newSpeed;
-      setPlaybackRate(newSpeed);
+      player.playbackRate = value;
+      setPlaybackRate(value);
     }
   };
 
@@ -115,8 +121,23 @@ function VideoControls({
     }
   };
 
-  // ✅ 计算进度百分比
+  // 计算进度百分比
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  // 清晰度状态
+  const [quality, setQuality] = useState("智能");
+
+  const qualities = [
+    { label: "超清 1080P", value: "1080p" },
+    { label: "高清 720P", value: "720p" },
+    { label: "标清 540P", value: "540p" },
+    { label: "智能", value: "auto" },
+  ];
+  // 清晰度切换
+  const handleQualityChange = (label: string, value: string) => {
+    setQuality(label);
+    console.log("切换清晰度:", value);
+  };
 
   return (
     <div
@@ -124,12 +145,12 @@ function VideoControls({
       style={{
         left: "0",
         right: "64px",
-        paddingTop: "8px",
+        paddingTop: "0",
         paddingBottom: "8px",
       }}
     >
-      {/* ✅ 进度条 */}
-      <div className="w-full mb-2 -mt-1">
+      {/* 进度条 */}
+      <div className="w-full -mt-1">
         <Slider
           value={progress}
           onChange={handleProgressChange}
@@ -158,8 +179,6 @@ function VideoControls({
             {formattedCurrentTime} / {formattedDuration}
           </span>
 
-          <VolumeControl videoRef={videoRef} />
-
           {/* 弹幕输入框 */}
           <div className="relative flex-1 max-w-[300px]">
             <input
@@ -175,48 +194,102 @@ function VideoControls({
 
         {/* 右侧功能按钮 */}
         <div className="flex items-center gap-2">
-          <button
-            className="text-[#837f7fa6] flex items-center gap-2 group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all"
-            onClick={() => onAutoPlayChange(!autoPlayChecked)}
+          <Tooltip content="自动连播 K" showArrow={false}>
+            <button
+              className="text-[#837f7fa6] flex items-center gap-2 group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all"
+              onClick={() => onAutoPlayChange(!autoPlayChecked)}
+            >
+              <Switch
+                checked={autoPlayChecked}
+                size="small"
+                aria-label="连播开关"
+                style={{
+                  backgroundColor: autoPlayChecked ? "#fe2c55" : "#d9d9d9",
+                }}
+              />
+              <span>连播</span>
+            </button>
+          </Tooltip>
+          <Tooltip content="清屏 J" showArrow={false}>
+            <button
+              onClick={() => onClearScreenChange(!clearScreenChecked)}
+              className="flex items-center gap-2 text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all"
+            >
+              <Switch
+                checked={clearScreenChecked}
+                size="small"
+                aria-label="清屏开关"
+                style={{
+                  backgroundColor: clearScreenChecked ? "#fe2c55" : "#d9d9d9",
+                }}
+              />
+              <span>清屏</span>
+            </button>
+          </Tooltip>
+          {/* 清晰度选择器 */}
+          <Dropdown
+            className="!bg-[#5e5c5c]"
+            trigger="hover"
+            position="top"
+            render={
+              <Dropdown.Menu>
+                {qualities.map((item) => (
+                  <Dropdown.Item
+                    className="!text-[#a7a1a1]"
+                    key={item.value}
+                    active={quality === item.label} // 高亮当前选中项
+                    onClick={() => handleQualityChange(item.label, item.value)}
+                    style={{
+                      color: quality === item.label ? "#fff font-bold" : "#fff",
+                      backgroundColor:
+                        quality === item.label ? "#ffffff0a" : "transparent",
+                    }}
+                  >
+                    {item.label}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            }
           >
-            <Switch
-              checked={autoPlayChecked}
-              size="small"
-              aria-label="连播开关"
-              style={{
-                backgroundColor: autoPlayChecked ? "#fe2c55" : "#d9d9d9",
-              }}
-            />
-            <span>连播</span>
-          </button>
+            <button className="text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all">
+              {quality}
+            </button>
+          </Dropdown>
 
-          <button
-            onClick={() => onClearScreenChange(!clearScreenChecked)}
-            className="flex items-center gap-2 text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all"
+          {/* 倍速选择器 */}
+          <Dropdown
+            trigger="hover"
+            position="top"
+            render={
+              <Dropdown.Menu className="!bg-[#5e5c5c] !border-none !p-2">
+                {speeds.map((item) => (
+                  <Dropdown.Item
+                    key={item.value}
+                    onClick={() => handleSpeedChange(item.value)}
+                    className="!p-0 !bg-transparent"
+                  >
+                    <span
+                      className={`
+                      block w-full px-4 py-2 text-center rounded mb-1 last:mb-0
+                      transition-all cursor-pointer
+                      ${
+                        playbackRate === item.value
+                          ? "bg-[#ffffff0a] text-[#fff]"
+                          : "border border-transparent hover:bg-[#ffffff0a] text-[#a7a1a1]"
+                      }
+                    `}
+                    >
+                      {item.label}
+                    </span>
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            }
           >
-            <Switch
-              checked={clearScreenChecked}
-              size="small"
-              aria-label="清屏开关"
-              style={{
-                backgroundColor: clearScreenChecked ? "#fe2c55" : "#d9d9d9",
-              }}
-            />
-            <span>清屏</span>
-          </button>
-
-          <button className="text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all">
-            智能
-          </button>
-
-          {/* ✅ 倍速按钮 */}
-          <button
-            onClick={handleSpeedChange}
-            className="text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all"
-          >
-            {playbackRate === 1 ? "倍速" : `${playbackRate}x`}
-          </button>
-
+            <button className="text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all">
+              {playbackRate === 1 ? "倍速" : `${playbackRate}x`}
+            </button>
+          </Dropdown>
           <Tooltip content="稍后再看" showArrow={false}>
             <button className="text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all">
               <MdWatchLater size={20} />
@@ -243,7 +316,7 @@ function VideoControls({
             </button>
           </Tooltip>
 
-          <Tooltip content="进入全屏" showArrow={false}>
+          <Tooltip content="进入全屏 F" showArrow={false}>
             <button
               onClick={handleFullscreen}
               className="text-[#837f7fa6] group-hover:text-white text-sm font-bold px-2 py-1 rounded transition-all"
