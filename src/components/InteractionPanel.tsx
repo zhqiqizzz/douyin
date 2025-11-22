@@ -4,7 +4,7 @@ import {
   IconComment,
   IconStar,
   IconStarStroked,
-  IconShareStroked as IconShare,
+  IconForward as IconShare,
   IconMusic,
   IconMoreStroked as IconMore,
   IconSetting,

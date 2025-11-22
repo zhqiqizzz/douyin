@@ -10,9 +10,8 @@ import {
   likeCommentAtom,
   commentSortAtom,
 } from "../store/commentStore";
-import type { CommentSortType } from "../store/commentStore";
 import CommentList from "./CommentList";
-import { IconClose, IconSend, IconLoading } from "@douyinfe/semi-icons";
+import { IconClose, IconSend } from "@douyinfe/semi-icons";
 import { Spin } from "@douyinfe/semi-ui";
 
 interface CommentDrawerProps {
