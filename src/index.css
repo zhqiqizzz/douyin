@@ -17,3 +17,77 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Custom video progress slider styles to match requested design */
+.video-progress-slider .semi-slider-rail,
+.video-progress-slider .semi-slider-rail-wrap {
+  height: 2px !important;
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.video-progress-slider .semi-slider-track {
+  height: 2px !important;
+  border-radius: 9999px !important;
+  background: #ffffff8f !important;
+}
+
+/* handle 默认可见（带灰色），悬停或拖拽时高亮 */
+.video-progress-slider .semi-slider-handle,
+.video-progress-slider .semi-slider-thumb,
+.video-progress-slider .semi-slider-dot {
+  position: absolute !important;
+  top: 50% !important;
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
+  border: 0 !important;
+  /* 保留 X 方向的 left/百分比由 slider JS 设置，不要覆盖 */
+  transform: translate(-50%, -50%) scale(0.6) !important;
+  opacity: 0 !important; /* 默认隐藏 */
+  transition: transform 120ms ease, opacity 120ms ease,
+    background-color 120ms ease;
+  z-index: 30 !important;
+  pointer-events: none !important; /* 不可交互 */
+}
+
+/* show thin line without circle when not hovered */
+.video-progress-slider {
+  padding: 6px 0 !important;
+}
+
+/* show handle on hover or when dragging/active */
+.video-progress-slider:hover .semi-slider-handle,
+.video-progress-slider:hover .semi-slider-thumb,
+.video-progress-slider:hover .semi-slider-dot,
+.video-progress-slider.semi-slider-dragging .semi-slider-handle,
+.video-progress-slider.semi-slider-dragging .semi-slider-thumb,
+.video-progress-slider.semi-slider-dragging .semi-slider-dot,
+.video-progress-slider.semi-slider-pressed .semi-slider-handle,
+.video-progress-slider.semi-slider-pressed .semi-slider-thumb,
+.video-progress-slider.semi-slider-pressed .semi-slider-dot {
+  opacity: 1 !important;
+  transform: translate(-50%, -50%) scale(1) !important;
+  pointer-events: auto !important;
+}
+
+/* make sure focus/active states look consistent */
+/* hover/active: 放大并变为纯白高对比 */
+.video-progress-slider:hover .semi-slider-handle,
+.video-progress-slider:hover .semi-slider-thumb,
+.video-progress-slider:hover .semi-slider-dot,
+.video-progress-slider.semi-slider-dragging .semi-slider-handle,
+.video-progress-slider.semi-slider-pressed .semi-slider-handle {
+  transform: translateY(-27%) scale(1.12) !important;
+  opacity: 1 !important;
+  background: #ffffff !important;
+  pointer-events: auto !important; /* 允许交互（拖拽） */
+}
+
+.video-progress-slider:hover .semi-slider-track {
+  height: 3px !important;
+  border-radius: 9999px !important;
+  background: #fffffff5 !important;
+}
