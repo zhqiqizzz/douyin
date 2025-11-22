@@ -1,86 +1,235 @@
+// store/commentStore.ts
 import { atom } from "jotai";
 import type { CommentItem } from "../types";
-import { mockCommentData } from "../mock/commentData";
-import { fetchCommentsByVideoId, postComment } from "../utils/mockRequest";
 
-// 当前视频的评论列表
+export const showCommentsAtom = atom(false);
 export const commentsAtom = atom<CommentItem[]>([]);
+export const commentsLoadingAtom = atom(false);
+export const commentInputAtom = atom("");
+export const commentSortAtom = atom<"hot" | "time">("hot");
 
-// 评论加载状态
-export const commentsLoadingAtom = atom<boolean>(false);
+// ✅ localStorage 键名前缀
+const COMMENTS_STORAGE_KEY = "video_comments_";
 
-// 评论输入框内容
-export const commentInputAtom = atom<string>("");
+// ✅ 从 localStorage 读取评论
+const getCommentsFromStorage = (videoId: string): CommentItem[] => {
+  try {
+    const stored = localStorage.getItem(COMMENTS_STORAGE_KEY + videoId);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error("读取评论失败:", error);
+    return [];
+  }
+};
 
-// 是否显示评论区
-export const showCommentsAtom = atom<boolean>(false);
+// ✅ 保存评论到 localStorage
+const saveCommentsToStorage = (videoId: string, comments: CommentItem[]) => {
+  try {
+    localStorage.setItem(
+      COMMENTS_STORAGE_KEY + videoId,
+      JSON.stringify(comments)
+    );
+  } catch (error) {
+    console.error("保存评论失败:", error);
+  }
+};
 
-// 评论排序方式
-export type CommentSortType = "hot" | "time";
-export const commentSortAtom = atom<CommentSortType>("hot");
+// ✅ 计算总评论数（一级 + 二级）
+export const totalCommentCountAtom = atom((get) => {
+  const comments = get(commentsAtom);
+  let total = comments.length;
+  comments.forEach((comment) => {
+    if (comment.replies) {
+      total += comment.replies.length;
+    }
+  });
+  return total;
+});
 
-// 获取评论列表
+// ✅ 加载评论（优先从 localStorage 读取）
 export const loadCommentsAtom = atom(
   null,
   async (get, set, videoId: string) => {
     set(commentsLoadingAtom, true);
     try {
-      const comments = await fetchCommentsByVideoId(videoId);
-      set(commentsAtom, comments);
-      console.log(`💬 加载了 ${comments.length} 条评论`);
+      // 先从 localStorage 读取
+      const storedComments = getCommentsFromStorage(videoId);
+
+      if (storedComments.length > 0) {
+        // 如果有本地缓存，直接使用
+        set(commentsAtom, storedComments);
+        set(commentsLoadingAtom, false);
+        return;
+      }
+
+      // 如果没有缓存，使用 mock 数据（实际项目中这里调用 API）
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const mockComments: CommentItem[] = [
+        {
+          id: "1",
+          user: {
+            id: "user1",
+            name: "张三",
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=1",
+          },
+          content: "这个视频太精彩了！学到了很多东西，感谢分享！👍",
+          likes: 128,
+          createTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          replies: [
+            {
+              id: "1-1",
+              user: {
+                id: "user2",
+                name: "李四",
+                avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=2",
+              },
+              content: "同感！已经收藏了，准备多看几遍",
+              likes: 32,
+              createTime: new Date(
+                Date.now() - 1 * 60 * 60 * 1000
+              ).toISOString(),
+              replies: [],
+            },
+            {
+              id: "1-2",
+              user: {
+                id: "user3",
+                name: "王五",
+                avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=3",
+              },
+              content: "确实讲得很好，期待更新",
+              likes: 15,
+              createTime: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+              replies: [],
+            },
+          ],
+        },
+        {
+          id: "2",
+          user: {
+            id: "user4",
+            name: "赵六",
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=4",
+          },
+          content: "讲解得很详细，每一步都很清楚，赞👍\n非常实用的教程",
+          likes: 56,
+          createTime: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+          replies: [],
+        },
+        {
+          id: "3",
+          user: {
+            id: "user5",
+            name: "孙七",
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=5",
+          },
+          content: "太棒了！正是我需要的内容",
+          likes: 23,
+          createTime: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
+          replies: [
+            {
+              id: "3-1",
+              user: {
+                id: "user6",
+                name: "周八",
+                avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=6",
+              },
+              content: "+1，很有帮助",
+              likes: 8,
+              createTime: new Date(
+                Date.now() - 8 * 60 * 60 * 1000
+              ).toISOString(),
+              replies: [],
+            },
+          ],
+        },
+      ];
+
+      set(commentsAtom, mockComments);
+      // 保存到 localStorage
+      saveCommentsToStorage(videoId, mockComments);
     } catch (error) {
-      console.error("❌ 加载评论失败:", error);
-      set(commentsAtom, []);
+      console.error("加载评论失败:", error);
     } finally {
       set(commentsLoadingAtom, false);
     }
   }
 );
 
-// 发送评论
-export const sendCommentAtom = atom(null, async (get, set, videoId: string) => {
-  const content = get(commentInputAtom).trim();
-  if (!content) {
-    alert("⚠️ 请输入评论内容");
-    return;
-  }
+// ✅ 发送评论（同步到 localStorage）
+export const sendCommentAtom = atom(
+  null,
+  async (
+    get,
+    set,
+    params: { videoId: string; content: string; parentId?: string }
+  ) => {
+    const { videoId, content, parentId } = params;
+    if (!content.trim()) return;
 
-  try {
-    const result = await postComment(videoId, content);
-    if (result.success) {
-      // 添加到评论列表顶部
+    try {
+      // TODO: 实际项目中调用 API
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const currentComments = get(commentsAtom);
-      set(commentsAtom, [result.comment, ...currentComments]);
-      set(commentInputAtom, ""); // 清空输入框
-      console.log("✅ 评论发送成功");
-    }
-  } catch (error) {
-    console.error("❌ 发送评论失败:", error);
-    alert("❌ 发送失败，请重试");
-  }
-});
+      let updatedComments: CommentItem[];
 
-// 点赞评论
+      if (parentId) {
+        // 添加二级评论
+        const newReply: CommentItem = {
+          id: `temp-reply-${Date.now()}`,
+          user: {
+            id: "current-user",
+            name: "我",
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=current",
+          },
+          content: content.trim(),
+          likes: 0,
+          createTime: new Date().toISOString(),
+          replies: [],
+        };
+
+        updatedComments = currentComments.map((comment) => {
+          if (comment.id === parentId) {
+            return {
+              ...comment,
+              replies: [newReply, ...(comment.replies || [])],
+            };
+          }
+          return comment;
+        });
+      } else {
+        // 添加一级评论
+        const newComment: CommentItem = {
+          id: `temp-${Date.now()}`,
+          user: {
+            id: "current-user",
+            name: "我",
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=current",
+          },
+          content: content.trim(),
+          likes: 0,
+          createTime: new Date().toISOString(),
+          replies: [],
+        };
+
+        updatedComments = [newComment, ...currentComments];
+      }
+
+      // 更新状态
+      set(commentsAtom, updatedComments);
+
+      // ✅ 保存到 localStorage
+      saveCommentsToStorage(videoId, updatedComments);
+    } catch (error) {
+      console.error("发送评论失败:", error);
+      throw error;
+    }
+  }
+);
+
 export const likeCommentAtom = atom(null, (get, set, commentId: string) => {
-  const comments = get(commentsAtom);
-  const newComments = comments.map((comment) => {
-    if (comment.id === commentId) {
-      return {
-        ...comment,
-        likes: comment.likes + 1,
-      };
-    }
-    // 如果是回复
-    if (comment.replies) {
-      return {
-        ...comment,
-        replies: comment.replies.map((reply) =>
-          reply.id === commentId ? { ...reply, likes: reply.likes + 1 } : reply
-        ),
-      };
-    }
-    return comment;
-  });
-  set(commentsAtom, newComments);
-  console.log(`👍 点赞评论: ${commentId}`);
+  console.log("点赞评论:", commentId);
+  // TODO: 点赞逻辑也可以同步到 localStorage
 });

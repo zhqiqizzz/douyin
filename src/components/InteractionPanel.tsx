@@ -1,3 +1,4 @@
+// components/InteractionPanel.tsx
 import { useAtom, useSetAtom } from "jotai";
 import {
   IconHeartStroked,
@@ -21,6 +22,7 @@ import {
   toggleFavoriteAtom,
   toggleFollowAtom,
 } from "../store/interactionStore";
+import { totalCommentCountAtom } from "../store/commentStore";
 
 interface InteractionPanelProps {
   video: VideoItem;
@@ -28,48 +30,42 @@ interface InteractionPanelProps {
 }
 
 function InteractionPanel({ video, onCommentClick }: InteractionPanelProps) {
-  // 获取状态
   const [likedVideos] = useAtom(likedVideosAtom);
   const [favoritedVideos] = useAtom(favoritedVideosAtom);
   const [followedUsers] = useAtom(followedUsersAtom);
 
-  // 获取切换函数
+  // ✅ 获取实时评论总数
+  const [totalComments] = useAtom(totalCommentCountAtom);
+
   const toggleLike = useSetAtom(toggleLikeAtom);
   const toggleFavorite = useSetAtom(toggleFavoriteAtom);
   const toggleFollow = useSetAtom(toggleFollowAtom);
 
-  // 判断当前状态
   const isLiked = likedVideos.has(video.id);
   const isFavorited = favoritedVideos.has(video.id);
   const isFollowed = followedUsers.has(video.author.id);
 
-  // 点赞处理
   const handleLike = () => {
     toggleLike(video.id);
   };
 
-  // 收藏处理
   const handleFavorite = () => {
     toggleFavorite(video.id);
   };
 
-  // 关注处理
   const handleFollow = () => {
     toggleFollow(video.author.id);
   };
 
-  // 分享处理
   const handleShare = () => {
     showSharePanel(video);
   };
 
-  // 音乐处理
   const handleMusic = () => {
     console.log("查看音乐:", video.music.name);
     alert(`音乐信息\n\n歌曲: ${video.music.name}\n作者: ${video.music.author}`);
   };
 
-  // 更多操作
   const handleMore = () => {
     const choice = confirm(
       `更多操作\n\n视频: ${video.description.slice(0, 30)}...\n作者: ${
@@ -84,6 +80,10 @@ function InteractionPanel({ video, onCommentClick }: InteractionPanelProps) {
       reportVideo(video);
     }
   };
+
+  // ✅ 计算显示的评论数
+  const displayCommentCount =
+    totalComments > 0 ? totalComments : video.stats.comments;
 
   return (
     <div
@@ -112,7 +112,6 @@ function InteractionPanel({ video, onCommentClick }: InteractionPanelProps) {
             />
           </div>
 
-          {/* 关注按钮 */}
           {!isFollowed ? (
             <button
               onClick={handleFollow}
@@ -160,7 +159,7 @@ function InteractionPanel({ video, onCommentClick }: InteractionPanelProps) {
         >
           <IconComment className="text-white text-[28px] drop-shadow-lg group-hover:scale-110 transition-transform" />
           <span className="text-white text-[11px] mt-0.5 font-medium drop-shadow-lg">
-            {formatNumber(video.stats.comments)}
+            {formatNumber(displayCommentCount)}
           </span>
         </button>
 
