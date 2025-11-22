@@ -87,7 +87,7 @@ function InteractionPanel({ video, onCommentClick }: InteractionPanelProps) {
 
   return (
     <div
-      className="w-[72px] flex-shrink-0 flex flex-col justify-center items-center z-10 hover:bg-black"
+      className="w-[72px] flex-shrink-0 flex flex-col justify-center items-center z-10pointer-events-auto"
       style={{ height: "calc(100% - 4rem)" }}
     >
       <div className="flex flex-col items-center gap-3.5">

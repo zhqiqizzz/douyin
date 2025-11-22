@@ -211,19 +211,13 @@ function Home() {
 
         {/* 内容容器 */}
         <div className="flex-1 flex flex-row overflow-hidden relative bg-[#16181F] group/container">
-          <div className="flex-1 overflow-hidden flex flex-row rounded-tl-3xl rounded-tr-3xl peer">
-            {/* 左侧占位 */}
-            <div
-              className="w-[72px] flex-shrink-0 bg-black hover:bg-black"
-              style={{ height: "calc(100% - 4rem)" }}
-            ></div>
-
-            {/* 视频播放器区域 */}
-            <main
-              ref={videoContainerRef}
-              className="flex-1 relative bg-[#16181F] overflow-hidden group hover:bg-[#16181F]"
-              style={{ height: "calc(100% - 4rem)" }}
-            >
+          {/* 视频播放器区域 - 绝对定位居中整个可视区域（扣除右侧64px和底部控制栏） */}
+          <main
+            ref={videoContainerRef}
+            className="absolute inset-0 right-[64px] bottom-[80px] flex items-center justify-center bg-[#16181F] overflow-hidden group peer"
+          >
+            {/* 视频播放器容器 */}
+            <div className="relative w-full h-full flex items-center justify-center">
               {/* 视频播放器 */}
               {currentVideo && (
                 <VideoPlayer
@@ -236,18 +230,21 @@ function Home() {
 
               {/* 视频信息 - 用组件替换 */}
               {currentVideo && <VideoInfo video={currentVideo} />}
-            </main>
+            </div>
+          </main>
 
-            {/* 右侧互动区 */}
-            {currentVideo && (
+          {/* 右侧互动区 - 绝对定位在右侧 */}
+          {currentVideo && (
+            <div className="absolute right-[64px] top-0 bottom-0 z-10 pointer-events-none">
               <InteractionPanel
                 video={currentVideo}
                 onCommentClick={handleCommentClick}
               />
-            )}
-            {/* 评论抽屉 */}
-            {currentVideo && <CommentDrawer videoId={currentVideo.id} />}
-          </div>
+            </div>
+          )}
+
+          {/* 评论抽屉 */}
+          {currentVideo && <CommentDrawer videoId={currentVideo.id} />}
 
           {/* 视频控制栏 */}
           <VideoControls
@@ -258,7 +255,7 @@ function Home() {
           />
 
           {/* 右侧切换按钮栏 */}
-          <div className="w-[64px] flex-shrink-0 bg-[#16181F] flex flex-col justify-center items-center z-20 pb-4">
+          <div className="absolute right-0 top-0 bottom-0 w-[64px] flex-shrink-0 bg-[#16181F] flex flex-col justify-center items-center z-20 pb-4">
             <div className="flex flex-col gap-4">
               <button
                 onClick={goToPrev}

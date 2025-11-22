@@ -119,7 +119,7 @@ function VideoPlayer({
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 w-full h-full"
+      className="w-full h-full max-w-[540px] mx-auto"
       style={{ background: "#000" }}
     />
   );
