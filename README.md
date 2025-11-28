@@ -1,73 +1,81 @@
-# React + TypeScript + Vite
+# Douyin Clone (仿抖音)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+这是一个基于 React + TypeScript + Vite 构建的短视频平台仿制项目。
 
-Currently, two official plugins are available:
+## 特性
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **沉浸式视频播放**: 使用 `xgplayer` 实现流畅的视频播放体验。
+- **视频切换**: 支持通过按钮点击或键盘快捷键（上下方向键）切换视频。
+- **交互功能**: 支持点赞、评论、分享等基础交互。
+- **评论系统**: 底部弹出的评论抽屉，支持查看和发布评论。
+- **响应式布局**: 使用 Tailwind CSS 构建，适配移动端体验。
+- **状态管理**: 使用 `jotai` 进行轻量级全局状态管理。
 
-## React Compiler
+## 技术栈
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **核心框架**: [React 18](https://react.dev/)
+- **构建工具**: [Vite](https://vitejs.dev/)
+- **语言**: [TypeScript](https://www.typescriptlang.org/)
+- **样式**: [Tailwind CSS](https://tailwindcss.com/)
+- **UI 组件库**:
+  - [@douyinfe/semi-ui](https://semi.design/)
+- **状态管理**: [Jotai](https://jotai.org/)
+- **视频播放器**: [xgplayer](https://h5player.bytedance.com/)
+- **图标库**:
+  - [React Icons](https://react-icons.github.io/react-icons/)
+  - [@douyinfe/semi-icons](https://semi.design/zh-CN/other/icons)
 
-## Expanding the ESLint configuration
+## 快速开始
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 1. 克隆项目
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone https://github.com/zhqiqizzz/douyin.git
+cd douyin
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. 安装依赖
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+# 或者
+yarn
+# 或者
+pnpm install
 ```
+
+### 3. 启动开发服务器
+
+```bash
+npm run dev
+```
+
+访问 http://localhost:5173 查看效果。
+
+### 4. 构建生产版本
+
+```bash
+npm run build
+```
+
+## 目录结构
+
+```
+src/
+├── assets/         # 静态资源
+├── components/     # 公共组件 (评论、侧边栏、视频控制等)
+├── hooks/          # 自定义 Hooks (如键盘快捷键)
+├── mock/           # 模拟数据
+├── pages/          # 页面组件
+├── store/          # Jotai 状态管理
+├── types/          # TypeScript 类型定义
+├── utils/          # 工具函数
+├── App.tsx         # 根组件
+└── main.tsx        # 入口文件
+```
+
+## 待办事项
+
+- [ ] 搜索功能完善
+- [ ] 视频播放功能优化
+- [ ] 视频精选区

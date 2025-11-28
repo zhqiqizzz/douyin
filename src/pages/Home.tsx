@@ -36,6 +36,7 @@ import CommentDrawer from "../components/CommentDrawer";
 import { showCommentsAtom } from "../store/commentStore";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import SearchBar from "../components/SearchBar";
+
 function Home() {
   const [autoPlayChecked, setAutoPlayChecked] = React.useState(false);
   const [clearScreenChecked, setClearScreenChecked] = React.useState(false);
@@ -46,6 +47,7 @@ function Home() {
   const goToNext = useSetAtom(nextVideoAtom);
   const goToPrev = useSetAtom(prevVideoAtom);
   useKeyboardShortcuts();
+
   // 视频播放完成
   const handleVideoEnded = () => {
     if (autoPlayChecked) {
@@ -249,8 +251,28 @@ function Home() {
             ref={videoContainerRef}
             className="absolute inset-0 right-[64px] bottom-[80px] flex items-center justify-center bg-[#16181F] overflow-hidden group peer"
           >
+            {/* 动态毛玻璃背景 (Home层级) */}
+            {currentVideo && (
+              <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                {/* 默认封面背景 (视频未加载时显示) */}
+                <div
+                  className="absolute inset-[-20%] w-[140%] h-[140%] bg-cover bg-center bg-no-repeat blur-[80px] transition-all duration-500"
+                  style={{
+                    backgroundImage: `url(${currentVideo.coverUrl})`,
+                    filter: "brightness(0.6)",
+                  }}
+                />
+                {/* 动态视频背景 (Canvas) */}
+                <canvas
+                  id="home-dynamic-bg-canvas"
+                  className="absolute inset-[-20%] w-[140%] h-[140%] object-cover blur-[80px] scale-125"
+                  style={{ filter: "brightness(0.6)" }}
+                />
+              </div>
+            )}
+
             {/* 视频播放器容器 */}
-            <div className="relative w-full h-full flex items-center justify-center">
+            <div className="relative w-full h-full flex items-center justify-center z-10">
               {/* 视频播放器 */}
               {currentVideo && (
                 <VideoPlayer
